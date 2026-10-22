@@ -1,0 +1,49 @@
+# Builds gpclient/gpauth on GitHub's x86_64 runners and publishes a signed static Nix binary
+# cache on GitHub Pages, so hosts download instead of compiling. Source of truth is
+# forgejo.mit.edu/djbclark/nix-globalprotect; github.com/djbclark/nix-globalprotect is a push mirror.
+name: build-and-cache
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 2 * * *"   # daily, ahead of vps-primary's nixos-upgrade (04:33 UTC)
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+env:
+  CACHE_URL: https://djbclark.github.io/nix-globalprotect
+  CACHE_PUBLIC_KEY: djbclark-nix-globalprotect-1:bV0OVului8Zgq+MiJjq0CBGg+zlI6Vz6/4mVyqx68WQ=
+jobs:
+  build:
+    # Forgejo also reads .github/workflows; this job is for GitHub only.
+    if: github.server_url == 'https://github.com'
+    runs-on: ubuntu-latest   # x86_64-linux, like vps-primary
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            extra-substituters = ${{ env.CACHE_URL }}
+            extra-trusted-public-keys = ${{ env.CACHE_PUBLIC_KEY }}
+      - name: Build and write the cache
+        env:
+          NIX_SIGNING_KEY: ${{ secrets.NIX_SIGNING_KEY }}
+        run: |
+          umask 077
+          printf '%s' "$NIX_SIGNING_KEY" > "$RUNNER_TEMP/signing-key"
+          NIX_SIGNING_KEY_FILE="$RUNNER_TEMP/signing-key" ci/build-cache.sh public
+          rm -f "$RUNNER_TEMP/signing-key"
+          chmod -R a+rX public
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v5

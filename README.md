@@ -65,6 +65,30 @@ sudo gpclient connect gpvpn.mit.edu --browser remote --hip --gateway "US East" \
   --cookie-cache=$HOME/.cache/gp-mit/cookie --script "vpn-slice 18.0.0.0/8"
 ```
 
+## Binary cache (download instead of compiling)
+
+GitHub Actions (`.github/workflows/cache.yml`, on the GitHub mirror
+[github.com/djbclark/nix-globalprotect](https://github.com/djbclark/nix-globalprotect)) builds both packages
+on x86_64-linux runners and publishes a signed static binary cache on GitHub Pages. It runs on every push to
+`main`, daily at 02:17 UTC, and by hand (`workflow_dispatch`). It holds only the store paths that cache.nixos.org
+lacks (gpclient and gpauth, about 6 MB per nixpkgs revision), built against this flake's own `nixpkgs` and against
+the nixpkgs that `site-djbclark` pins on `deploy-vps-primary` and `master` (`ci/build-cache.sh`).
+
+```nix
+nix.settings = {
+  substituters = [ "https://djbclark.github.io/nix-globalprotect" ];  # added after cache.nixos.org
+  trusted-public-keys = [ "djbclark-nix-globalprotect-1:bV0OVului8Zgq+MiJjq0CBGg+zlI6Vz6/4mVyqx68WQ=" ];
+};
+```
+
+A hit needs the exact store path: with `inputs.nixpkgs.follows`, your nixpkgs must be one of the revisions
+built above, otherwise Nix compiles as before. The signing key lives only in the GitHub secret
+`NIX_SIGNING_KEY` (plus an offline copy); anyone who can change the workflow on `main` can publish
+binaries that trusting hosts will install, so treat push access to both repositories accordingly.
+
+Mirror: forgejo.mit.edu is the source of truth and push-mirrors `main` to GitHub over SSH (a write
+deploy key on the GitHub repository); do not commit on GitHub directly.
+
 ## Build and verify
 
 ```sh
