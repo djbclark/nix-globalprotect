@@ -82,8 +82,9 @@ nix.settings = {
 ```
 
 A hit needs the exact store path: with `inputs.nixpkgs.follows`, your nixpkgs must be one of the revisions
-built above, otherwise Nix compiles as before. The signing key lives only in the GitHub secret
-`NIX_SIGNING_KEY` (plus an offline copy); anyone who can change the workflow on `main` can publish
+built above, otherwise Nix compiles as before. The signing key exists only in the GitHub secret
+`NIX_SIGNING_KEY` (no other copy; to rotate, generate a new key with `nix key generate-secret`,
+replace the secret, update `CACHE_PUBLIC_KEY` in the workflow and every consumer's trusted keys). Anyone who can change the workflow on `main` can publish
 binaries that trusting hosts will install, so treat push access to both repositories accordingly.
 
 Mirror: forgejo.mit.edu is the source of truth and push-mirrors `main` to GitHub over SSH (a write
