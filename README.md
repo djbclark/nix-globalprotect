@@ -5,6 +5,11 @@ A Nix flake that builds [yuezk/GlobalProtect-openconnect](https://github.com/yue
 `globalprotect-openconnect 3.1.0-1`) from source, for MIT's GlobalProtect VPN (`gpvpn.mit.edu`) on
 headless NixOS machines.
 
+> **Status (2026-10-30): no longer used by djbclark.** My machines reach MITnet through a Tailscale exit node on a
+> MIT XVM VM instead (see [xvm-debian-howto](https://forgejo.mit.edu/djbclark/xvm-debian-howto) section 8), because
+> GlobalProtect needed a Touchstone/Duo login per connection and could not connect from a host that cannot reach
+> MITnet. The flake and the binary cache still build, but I no longer test them against `gpvpn.mit.edu`.
+
 nixos-26.05 ships `gpclient`/`gpauth` 2.6.x. This flake reuses the nixpkgs derivations and only swaps
 the source, the vendored Cargo dependencies and the path patches that changed in 3.x.
 
@@ -34,7 +39,7 @@ nix run git+https://forgejo.mit.edu/djbclark/nix-globalprotect -- --version
 # gpclient 3.1.0 (4faa2ecb0 <build date>)
 ```
 
-In a NixOS flake (this is how `site-djbclark`'s `nixos/flake.nix` uses it for vps-primary):
+In a NixOS flake (`site-djbclark`'s `nixos/flake.nix` used it this way for vps-primary until 2026-10-23):
 
 ```nix
 {
@@ -119,7 +124,7 @@ Bump `version`, set both `hash` values to `lib.fakeHash`, `nix build`, paste the
 
 ## What is specific to djbclark
 
-Nothing in the flake. The `gpvpn.mit.edu` command line above (gateway `US East`, `vpn-slice 18.0.0.0/8`)
-is the one vps-primary uses; change the gateway and routes for your needs.
+Nothing in the flake. The `gpvpn.mit.edu` command line (gateway `US East`, `vpn-slice 18.0.0.0/8`) is the one
+vps-primary used until 2026-10-23, when I stopped using GlobalProtect; change the gateway and routes for your needs.
 
 License: the packaging is MIT (see `LICENSE`); GlobalProtect-openconnect itself is GPL-3.0.
