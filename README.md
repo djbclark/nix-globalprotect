@@ -120,6 +120,8 @@ Bump `version`, set both `hash` values to `lib.fakeHash`, `nix build`, paste the
 ## What is specific to djbclark
 
 Nothing in the flake. The `gpvpn.mit.edu` command line (gateway `US East`, `vpn-slice 18.0.0.0/8`) is the one
-vps-primary used; change the gateway and routes for your needs.
+vps-primary used; change the gateway and routes for your needs. That command
+line is not tested against `gpvpn.mit.edu`; only the build and
+`gpclient --version`/`connect --help` are checked.
 
 License: the packaging is MIT (see `LICENSE`); GlobalProtect-openconnect itself is GPL-3.0.
