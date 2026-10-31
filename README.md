@@ -5,11 +5,6 @@ A Nix flake that builds [yuezk/GlobalProtect-openconnect](https://github.com/yue
 `globalprotect-openconnect 3.1.0-1`) from source, for MIT's GlobalProtect VPN (`gpvpn.mit.edu`) on
 headless NixOS machines.
 
-> **Status (2026-10-30): no longer used by djbclark.** My machines reach MITnet through a Tailscale exit node on a
-> MIT XVM VM instead (see [xvm-debian-howto](https://forgejo.mit.edu/djbclark/xvm-debian-howto) section 8), because
-> GlobalProtect needed a Touchstone/Duo login per connection and could not connect from a host that cannot reach
-> MITnet. The flake and the binary cache still build, but I no longer test them against `gpvpn.mit.edu`.
-
 nixos-26.05 ships `gpclient`/`gpauth` 2.6.x. This flake reuses the nixpkgs derivations and only swaps
 the source, the vendored Cargo dependencies and the path patches that changed in 3.x.
 
@@ -39,7 +34,7 @@ nix run git+https://forgejo.mit.edu/djbclark/nix-globalprotect -- --version
 # gpclient 3.1.0 (4faa2ecb0 <build date>)
 ```
 
-In a NixOS flake (`site-djbclark`'s `nixos/flake.nix` used it this way for vps-primary until 2026-10-23):
+In a NixOS flake:
 
 ```nix
 {
@@ -102,14 +97,14 @@ nix build .#gpclient && ./result/bin/gpclient --version
 nix flake check
 ```
 
-Verified on x86_64-linux, 2026-10-22: both packages build (the Rust test suites run, see below),
+Verified on x86_64-linux: both packages build (the Rust test suites run, see below),
 `gpclient --version` prints `gpclient 3.1.0 (4faa2ecb0 ...)`, and `gpclient connect --help` is
 identical to the upstream Debian 3.1.0-1 build's.
 
 ## What differs from the nixpkgs derivation
 
 1. `src` is tag `v3.1.0` (with submodules: vendored openconnect and libxml2); `cargoDeps` re-vendored.
-2. `postPatch`: 3.x no longer has `hipreport.sh` (HIP is built in), and `constants.rs` gained gpgui,
+2. `postPatch`: 3.x has no `hipreport.sh` (HIP is built in), and `constants.rs` has gpgui,
    gpgui-helper and script-installer paths; all Linux `/usr/...` paths point into `$out` (gpauth into its own store path).
 3. `postInstall`: installs the upstream `vpnc-script` (resolvconf, resolvectl and busctl pinned to store paths,
    `PATH` wrapped) and the NetworkManager dispatcher hooks.
@@ -125,6 +120,6 @@ Bump `version`, set both `hash` values to `lib.fakeHash`, `nix build`, paste the
 ## What is specific to djbclark
 
 Nothing in the flake. The `gpvpn.mit.edu` command line (gateway `US East`, `vpn-slice 18.0.0.0/8`) is the one
-vps-primary used until 2026-10-23, when I stopped using GlobalProtect; change the gateway and routes for your needs.
+vps-primary used; change the gateway and routes for your needs.
 
 License: the packaging is MIT (see `LICENSE`); GlobalProtect-openconnect itself is GPL-3.0.
